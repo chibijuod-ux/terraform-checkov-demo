@@ -1,0 +1,22 @@
+name: Checkov
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checkov:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          soft_fail: false
+          output_format: cli
