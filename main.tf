@@ -35,6 +35,7 @@ resource "aws_s3_bucket_public_access_block" "demo" {
 }
 
 resource "aws_security_group" "demo" {
+  #checkov:skip=CKV2_AWS_5:Demo security group not attached to an instance
   name        = "iac-lab-restricted-ssh"
   description = "SSH restricted to a single admin CIDR"
 
@@ -67,3 +68,24 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "demo" {
     }
   }
 }
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "demo" {
+  description         = "Key for the demo S3 bucket"
+  enable_key_rotation = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnableRootAccountAccess"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      }
+    ]
+  })
+}
+
