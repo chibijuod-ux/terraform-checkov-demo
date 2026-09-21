@@ -11,43 +11,59 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-# INTENTIONALLY INSECURE: for Checkov demo only
 resource "aws_s3_bucket" "demo" {
   bucket = "iac-lab-meda-2026"
+  #checkov:skip=CKV_AWS_144:Cross-region replication not needed for a demo bucket
+  #checkov:skip=CKV2_AWS_61:No lifecycle requirements for an empty demo bucket
+  #checkov:skip=CKV2_AWS_62:No event consumers in this demo
+  #checkov:skip=CKV_AWS_18:Access logging needs a separate log bucket, out of scope
 }
 
 resource "aws_s3_bucket_ownership_controls" "demo" {
   bucket = aws_s3_bucket.demo.id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = "BucketOwnerEnforced"
   }
 }
 
 resource "aws_s3_bucket_public_access_block" "demo" {
   bucket                  = aws_s3_bucket.demo.id
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_acl" "demo" {
-  depends_on = [
-    aws_s3_bucket_ownership_controls.demo,
-    aws_s3_bucket_public_access_block.demo,
-  ]
-  bucket = aws_s3_bucket.demo.id
-  acl    = "private"
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_security_group" "demo" {
-  name        = "iac-lab-public-ssh"
+  name        = "iac-lab-restricted-ssh"
+  description = "SSH restricted to a single admin CIDR"
 
   ingress {
-    description = "Intentionally open SSH for scanner demo"
+    description = "SSH from my IP only"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["203.0.113.10/32"]
+  }
+}
+resource "aws_kms_key" "demo" {
+  description         = "Key for the demo S3 bucket"
+  enable_key_rotation = true
+}
+
+resource "aws_s3_bucket_versioning" "demo" {
+  bucket = aws_s3_bucket.demo.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "demo" {
+  bucket = aws_s3_bucket.demo.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.demo.arn
+    }
   }
 }
