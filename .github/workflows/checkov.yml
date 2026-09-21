@@ -4,12 +4,13 @@ on:
   pull_request:
   push:
     branches: [main]
+    
+permissions:
+  contents: read
 
 jobs:
   checkov:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
 
