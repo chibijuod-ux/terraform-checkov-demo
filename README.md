@@ -27,12 +27,11 @@ default-open settings and skipped steps are easy to miss at scale:
   quick share, a debugging session) and never locked back down.
 - **An open SSH ingress rule (`0.0.0.0/0` on port 22)** allows any host on
   the internet to attempt to connect to port 22 on the associated instance.
-  Combined with a weak password or an exposed key, this is a direct path to
-  compromise; even without a successful login, it invites constant automated
+  Combined with a weak password or an exposed key, this invites constant automated
   scanning and brute-force traffic.
 - **Missing encryption at rest** means that if bucket data is ever exposed
   or accessed outside the intended path (misconfigured policy, compromised
-  credentials), there's no additional layer protecting the underlying data.
+  credentials), there's no additional layer protecting the data.
 
 This project treats policy-as-code scanning as a way to catch these classes
 of misconfiguration automatically, before they reach a running environment,
