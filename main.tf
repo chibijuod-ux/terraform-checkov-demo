@@ -46,6 +46,7 @@ resource "aws_security_group" "demo" {
     protocol    = "tcp"
     cidr_blocks = ["203.0.113.10/32"]
   }
+}
 
 resource "aws_s3_bucket_versioning" "demo" {
   bucket = aws_s3_bucket.demo.id
